@@ -9,7 +9,7 @@ async function listMoviesShowing() {
     return   knex("movies as m")
             .join("movies_theaters as mt", "mt.movie_id", "m.movie_id")
             .select("m.*", "mt.is_showing")
-            .where("mt.is_showing", "true")
+            .where("mt.is_showing", true)
             .groupBy("m.movie_id", "mt.is_showing")
 }
 

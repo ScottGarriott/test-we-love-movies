@@ -10,17 +10,17 @@ async function setCritic(review) {
 }
 
 function list(movie_id) {
-    return knex("reviews")
+        return knex("reviews")
         .select("*")
-        .where({ movie_id })
-        .then((reviews) => Promise.all(reviews.map(setCritic)))
-        
+        .where("movie_id", movie_id)
+        .then((reviews) =>Promise.all(reviews.map(setCritic)))
 }
 
-function read(reviewId) {
+function read(review_id) {
     return knex("reviews")
         .select("*")
-        .where({ review_id: reviewId })
+        .where({ review_id: review_id })
+        //.then(console.log)
         .first()
 }
 
@@ -32,9 +32,13 @@ function update(updatedReview) {
     return knex("reviews")
         .select("*")
         .where({ review_id: updatedReview.review_id })
-        .update(updatedReview, "*")
-        .then(() => read(review.review_id))
-        .then(setCritic)
+        .update(updatedReview)
+        .then(() =>
+        knex("reviews").select("*")
+        .where({review_id: updatedReview.review_id})
+        .then((review) => read(review[0].review_id))
+        .then(setCritic))
+        //cannot use more than 1 select in a promise chain
 }
 
 module.exports = {

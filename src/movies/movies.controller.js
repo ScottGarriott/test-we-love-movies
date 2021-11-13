@@ -12,14 +12,10 @@ async function movieExists(req, res, next) {
 
 async function list(req, res, next) {
     const query = req.query
-    console.log(query)
     if(query.is_showing === "true") {
-        console.log("QUERY")
         const data = await moviesService.listMoviesShowing()
-        console.log("data", data.length)
         res.json({ data })
     }else{
-        console.log("NOT QUERY")
         const data = await moviesService.list()
         res.json({ data })
     }

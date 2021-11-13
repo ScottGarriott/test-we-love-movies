@@ -1,5 +1,4 @@
 const reviewsService = require("./reviews.service")
-const mehtodNotAllowed = require("../errors/methodNotAllowed")
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary")
 const methodNotAllowed = require("../errors/methodNotAllowed")
 // const hasProperties = require("../errors/hasProperties")
@@ -29,34 +28,41 @@ const methodNotAllowed = require("../errors/methodNotAllowed")
 //     next()
 // }
 
+async function read(req, res, next) {
+    const { data } = await reviewsService.read(req.params.review_id)
+    res.json({ data })
+}
+
 async function reviewExists(req, res, next) {
     const review = await reviewsService.read(req.params.reviewId)
+    //console.log("-----> ", review)
 
-    if(review){
+    if(!!review){
         res.locals.review = review
-        next()
-    }
-    next({
+        return next()
+        //next does not necesarily end the function, so either return the next or make it an if else statement
+    } else{
+   return next({
         status: 404,
         message: "Review cannot be found."
     })
+    }
 } 
 
 function hasMovieIdInPath(req, res, next) {
+    console.log("params", req.params)
     if(req.params.movieId) {
         return next()
     }
-    methodNotAllowed(req, res, next)
-}
-
-function noMovieIdInPath(req, res, next) {
-    if(req.params.movieId) {
-        return mehtodNotAllowed(req, res, next)
-    }
+    next({
+        status: 404,
+        message: "A movieId is required" 
+    })
 }
 
 async function list(req, res, next) {
-    const data = reviewsService.list(req.params.movieId)
+    const data = await reviewsService.list(req.params.movieId)
+    console.log("Data ", data)
     res.json({ data })
 }
 
@@ -66,12 +72,13 @@ async function destroy(req, res, next) {
 }
 
 async function update(req, res, next) {
+    //console.log("Updated")
     const updatedReview = {
-        ...req.locals.review,
+        ...res.locals.review,
         ...req.body.data,
         review_id: res.locals.review.review_id
     }
-
+     console.log("updated review ", updatedReview)
     const data = await reviewsService.update(updatedReview)
     res.status(200).json({ data })
 
@@ -79,13 +86,23 @@ async function update(req, res, next) {
 
 module.exports = {
     delete: [
-        noMovieIdInPath,
         asyncErrorBoundary(reviewExists), 
         asyncErrorBoundary(destroy)],
     update: [
-        noMovieIdInPath,
         asyncErrorBoundary(reviewExists),
         asyncErrorBoundary(update)
     ],
-    list: [hasMovieIdInPath, asyncErrorBoundary(list)],
+    list: [
+        hasMovieIdInPath, 
+        asyncErrorBoundary(list)
+    ],
+    read: asyncErrorBoundary(read)
 }
+
+//where is the data coming from, is it the right type?
+//are certain things firing, how is this supposed to run?
+//how is the data being passed along, is it being saved?
+
+//reconstruct the update and get paths
+
+//why is the movieId being lost in the params, when logged it had no params
